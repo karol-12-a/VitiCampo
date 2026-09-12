@@ -19,9 +19,9 @@ export async function POST(req: Request) {
     - Fase Fenologica: ${faseFenologica}
     - Sintomas Detectados: ${sintomasDetectados}`;
 
-    // FIJAMOS LA RUTA COMERCIAL DEL MODELO PARA EVITAR EL ERROR 404
+    // FORMATO DE MODELO REVISADO PARA ELIMINAR EL ERROR 404 DE GOOGLE
     const response = await ai.models.generateContent({
-      model: 'models/gemini-1.5-flash',
+      model: 'gemini-1.5-flash',
       contents: prompt,
     });
 
