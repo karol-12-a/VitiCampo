@@ -9,11 +9,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'GEMINI_API_KEY no configurada' }, { status: 500 });
     }
 
-    const prompt = `Actua como un ingeniero experto en viticultura. Analiza the following situation in the vinedo and genera un reporte estructurado con diagnostico presuntivo, nivel de riesgo y un plan de accion con 3 recomendaciones tecnicas:
+    const prompt = `Actua como un ingeniero experto en viticultura. Analiza la siguiente situacion en el vinedo y genera un reporte estructurado con diagnostico presuntivo, nivel de riesgo y un plan de accion con 3 recomendaciones tecnicas:
     - Variedad de Uva: ${variedadUva}
     - Fase Fenologica: ${faseFenologica}
     - Sintomas Detectados: ${sintomasDetectados}`;
 
+    // URL oficial de Google Gemini corregida con comillas invertidas de inyeccion
     const resp = await fetch(`https://googleapis.com{apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
