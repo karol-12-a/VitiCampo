@@ -16,9 +16,11 @@ export async function POST(req: Request) {
     - Fase Fenologica: ${faseFenologica}
     - Sintomas Detectados: ${sintomasDetectados}`;
 
-    const resp = await fetch(`https://googleapis.com{apiKey}`, {
+    const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }]
       }),
@@ -30,15 +32,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: data?.error?.message || 'Error en Google' }, { status: 500 });
     }
 
-    // Mapeo lineal directo sin arrays conflictivos para evitar errores 500
-    const textoFinal = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    let textoFinal = '';
+    
+    // EXTRACCIÓN SEGURA E INMUTABLE TRADICIONAL COMPATIBLE CON VERCEL
+    if (data && data['candidates'] && data['candidates'].length > 0) {
+      const candidate = data['candidates'][0];
+      if (candidate && candidate['content'] && candidate['content']['parts'] && candidate['content']['parts'].length > 0) {
+        textoFinal = candidate['content']['parts'][0]['text'] || '';
+      }
+    }
 
     if (!textoFinal) {
       return NextResponse.json({ error: 'Respuesta vacia de la IA' }, { status: 500 });
     }
 
     return NextResponse.json({ reporte: textoFinal });
+
   } catch (err: any) {
-    return NextResponse.json({ error: 'Error interno en el servidor de IA' }, { status: 500 });
+    return NextResponse.json({ error: err?.message || 'Error interno de red en el servidor' }, { status: 500 });
   }
 }
