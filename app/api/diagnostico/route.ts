@@ -14,39 +14,41 @@ export async function POST(req: Request) {
     - Fase Fenologica: ${faseFenologica}
     - Sintomas Detectados: ${sintomasDetectados}`;
 
+    // Configuración robusta y compatible con los servidores de Vercel
     const resp = await fetch(`https://googleapis.com{apiKey}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }]
       }),
     });
 
-    const data = await resp.json();
-    
     if (!resp.ok) {
-      return NextResponse.json({ error: data?.error?.message || 'Error en Google' }, { status: 500 });
+      const errorData = await resp.json().catch(() => ({}));
+      return NextResponse.json({ 
+        error: errorData?.error?.message || `Error del servidor externo (Status: ${resp.status})` 
+      }, { status: resp.status });
     }
 
-    let textoFinal = '';
+    const data = await resp.json();
     
-    // SINTAXIS DESTRUCTURADA INMUTABLE: Extrae el primer elemento de forma directa y nativa
-    if (data && data.candidates && data.candidates.length > 0) {
-      const [firstCandidate] = data.candidates;
-      if (firstCandidate && firstCandidate.content && firstCandidate.content.parts && firstCandidate.content.parts.length > 0) {
-        const [firstPart] = firstCandidate.content.parts;
-        if (firstPart) {
-          textoFinal = firstPart.text || '';
+    // Extracción segura por desestructuración nativa tolerante a fallos
+    const candidates = data?.candidates || [];
+    if (candidates.length > 0) {
+      const parts = candidates[0]?.content?.parts || [];
+      if (parts.length > 0) {
+        const textoFinal = parts[0]?.text || '';
+        if (textoFinal) {
+          return NextResponse.json({ reporte: textoFinal });
         }
       }
     }
 
-    if (!textoFinal) {
-      return NextResponse.json({ error: 'Respuesta vacia de la IA' }, { status: 500 });
-    }
+    return NextResponse.json({ error: 'La IA no devolvió una respuesta válida' }, { status: 500 });
 
-    return NextResponse.json({ reporte: textoFinal });
-  } catch (err) {
-    return NextResponse.json({ error: 'Error interno en el servidor de IA' }, { status: 500 });
+  } catch (err: any) {
+    return NextResponse.json({ error: err?.message || 'Error interno en el backend' }, { status: 500 });
   }
 }
