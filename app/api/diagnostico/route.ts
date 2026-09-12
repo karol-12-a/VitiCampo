@@ -16,7 +16,8 @@ export async function POST(req: Request) {
     - Fase Fenologica: ${faseFenologica}
     - Sintomas Detectados: ${sintomasDetectados}`;
 
-    const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey, {
+    // Conexión estable v1 oficial de Google
+    const resp = await fetch('https://googleapis.com' + apiKey, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json'
@@ -34,11 +35,14 @@ export async function POST(req: Request) {
 
     let textoFinal = '';
     
-    // EXTRACCIÓN SEGURA E INMUTABLE TRADICIONAL COMPATIBLE CON VERCEL
-    if (data && data['candidates'] && data['candidates'].length > 0) {
-      const candidate = data['candidates'][0];
-      if (candidate && candidate['content'] && candidate['content']['parts'] && candidate['content']['parts'].length > 0) {
-        textoFinal = candidate['content']['parts'][0]['text'] || '';
+    // EXTRACCIÓN NATIVA CORREGIDA: Acceso seguro al primer elemento del array sin romper el servidor
+    if (data && data.candidates && data.candidates.length > 0) {
+      const [firstCandidate] = data.candidates;
+      if (firstCandidate && firstCandidate.content && firstCandidate.content.parts && firstCandidate.content.parts.length > 0) {
+        const [firstPart] = firstCandidate.content.parts;
+        if (firstPart) {
+          textoFinal = firstPart.text || '';
+        }
       }
     }
 
