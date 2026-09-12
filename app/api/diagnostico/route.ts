@@ -14,7 +14,6 @@ export async function POST(req: Request) {
     - Fase Fenologica: ${faseFenologica}
     - Sintomas Detectados: ${sintomasDetectados}`;
 
-    // CAMBIO DE PRODUCCIÓN: Usamos v1 estable para evitar bloqueos de red de Vercel
     const resp = await fetch(`https://googleapis.com{apiKey}`, {
       method: 'POST',
       headers: { 
@@ -34,18 +33,16 @@ export async function POST(req: Request) {
 
     const data = await resp.json();
     
-    // Extracción segura tolerante a fallos mediante encadenamiento opcional limpio
-    const candidates = data?.candidates || [];
-    if (candidates.length > 0 && candidates[0]?.content?.parts?.length > 0) {
-      const textoFinal = candidates[0].content.parts[0].text || '';
-      if (textoFinal) {
-        return NextResponse.json({ reporte: textoFinal });
-      }
+    // EXTRACCIÓN PLANA Y SEGURA REVISADA CARÁCTER POR CARÁCTER
+    const textoFinal = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+    if (!textoFinal) {
+      return NextResponse.json({ error: 'La IA devolvió una respuesta vacía' }, { status: 500 });
     }
 
-    return NextResponse.json({ error: 'La IA no devolvió una respuesta válida' }, { status: 500 });
+    return NextResponse.json({ reporte: textoFinal });
 
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || 'Error de conexión en el servidor' }, { status: 500 });
+    return NextResponse.json({ error: err?.message || 'Error de conexión en el backend' }, { status: 500 });
   }
 }
