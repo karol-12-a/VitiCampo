@@ -14,7 +14,6 @@ export async function POST(req: Request) {
     - Fase Fenologica: ${faseFenologica}
     - Sintomas Detectados: ${sintomasDetectados}`;
 
-    // URL oficial de Google Gemini corregida con comillas invertidas de inyeccion
     const resp = await fetch(`https://googleapis.com{apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -30,6 +29,7 @@ export async function POST(req: Request) {
     }
 
     let textoFinal = '';
+    // REVISIÓN DEFINITIVA: Acceso correcto al primer elemento de la lista [0]
     if (data && data.candidates && data.candidates.length > 0) {
       const firstCandidate = data.candidates[0];
       if (firstCandidate && firstCandidate.content && firstCandidate.content.parts && firstCandidate.content.parts.length > 0) {
