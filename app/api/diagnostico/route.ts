@@ -12,7 +12,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'GEMINI_API_KEY no configurada' }, { status: 500 });
     }
 
-    // Inicialización oficial de la SDK de Google
     const ai = new GoogleGenAI({ apiKey });
 
     const prompt = `Actua como un ingeniero experto en viticultura. Analiza la siguiente situacion en el vinedo y genera un reporte estructurado con diagnostico presuntivo, nivel de riesgo y un plan de accion con 3 recomendaciones tecnicas:
@@ -20,9 +19,9 @@ export async function POST(req: Request) {
     - Fase Fenologica: ${faseFenologica}
     - Sintomas Detectados: ${sintomasDetectados}`;
 
-    // Llamada nativa al modelo estable de producción
+    // FIJAMOS LA RUTA COMERCIAL DEL MODELO PARA EVITAR EL ERROR 404
     const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
+      model: 'models/gemini-1.5-flash',
       contents: prompt,
     });
 
