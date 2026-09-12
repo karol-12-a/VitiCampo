@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     - Fase Fenologica: ${faseFenologica}
     - Sintomas Detectados: ${sintomasDetectados}`;
 
-    // Configuración robusta y compatible con los servidores de Vercel
+    // CAMBIO DE PRODUCCIÓN: Usamos v1 estable para evitar bloqueos de red de Vercel
     const resp = await fetch(`https://googleapis.com{apiKey}`, {
       method: 'POST',
       headers: { 
@@ -34,21 +34,18 @@ export async function POST(req: Request) {
 
     const data = await resp.json();
     
-    // Extracción segura por desestructuración nativa tolerante a fallos
+    // Extracción segura tolerante a fallos mediante encadenamiento opcional limpio
     const candidates = data?.candidates || [];
-    if (candidates.length > 0) {
-      const parts = candidates[0]?.content?.parts || [];
-      if (parts.length > 0) {
-        const textoFinal = parts[0]?.text || '';
-        if (textoFinal) {
-          return NextResponse.json({ reporte: textoFinal });
-        }
+    if (candidates.length > 0 && candidates[0]?.content?.parts?.length > 0) {
+      const textoFinal = candidates[0].content.parts[0].text || '';
+      if (textoFinal) {
+        return NextResponse.json({ reporte: textoFinal });
       }
     }
 
     return NextResponse.json({ error: 'La IA no devolvió una respuesta válida' }, { status: 500 });
 
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || 'Error interno en el backend' }, { status: 500 });
+    return NextResponse.json({ error: err?.message || 'Error de conexión en el servidor' }, { status: 500 });
   }
 }
