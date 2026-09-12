@@ -9,7 +9,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'GEMINI_API_KEY no configurada' }, { status: 500 });
     }
 
-    const prompt = `Actua como un ingeniero experto en viticultura. Analiza la siguiente situacion en el vinedo y genera un reporte estructurado con diagnostico presuntivo, nivel de riesgo y un plan de accion con 3 recommendations tecnicas:
+    const prompt = `Actua como un ingeniero experto en viticultura. Analiza la siguiente situacion en el vinedo y genera un reporte estructurado con diagnostico presuntivo, nivel de riesgo y un plan de accion con 3 recomendaciones tecnicas:
     - Variedad de Uva: ${variedadUva}
     - Fase Fenologica: ${faseFenologica}
     - Sintomas Detectados: ${sintomasDetectados}`;
@@ -30,11 +30,14 @@ export async function POST(req: Request) {
 
     let textoFinal = '';
     
-    // EXTRACCIÓN CON CORCHETES [0] VISIBLES E INMUTABLES
+    // SINTAXIS ALTERNATIVA ULTRA SEGURA: Sin corchetes conflictivos para el chat
     if (data && data.candidates && data.candidates.length > 0) {
-      const firstCandidate = data.candidates[0];
+      const firstCandidate = data.candidates.at(0);
       if (firstCandidate && firstCandidate.content && firstCandidate.content.parts && firstCandidate.content.parts.length > 0) {
-        textoFinal = firstCandidate.content.parts[0].text || '';
+        const firstPart = firstCandidate.content.parts.at(0);
+        if (firstPart) {
+          textoFinal = firstPart.text || '';
+        }
       }
     }
 
