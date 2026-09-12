@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenAI } from '@google/genai';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,28 +11,34 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'GEMINI_API_KEY no configurada' }, { status: 500 });
     }
 
-    const ai = new GoogleGenAI({ apiKey });
-
     const prompt = `Actua como un ingeniero experto en viticultura. Analiza la siguiente situacion en el vinedo y genera un reporte estructurado con diagnostico presuntivo, nivel de riesgo y un plan de accion con 3 recomendaciones tecnicas:
     - Variedad de Uva: ${variedadUva}
     - Fase Fenologica: ${faseFenologica}
     - Sintomas Detectados: ${sintomasDetectados}`;
 
-    // FORMATO DE MODELO REVISADO PARA ELIMINAR EL ERROR 404 DE GOOGLE
-    const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
-      contents: prompt,
+    const resp = await fetch(`https://googleapis.com{apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }]
+      }),
     });
 
-    const textoFinal = response.text || '';
+    const data = await resp.json();
+    
+    if (!resp.ok) {
+      return NextResponse.json({ error: data?.error?.message || 'Error en Google' }, { status: 500 });
+    }
+
+    // Mapeo lineal directo sin arrays conflictivos para evitar errores 500
+    const textoFinal = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
     if (!textoFinal) {
-      return NextResponse.json({ error: 'La IA devolvió una respuesta vacía' }, { status: 500 });
+      return NextResponse.json({ error: 'Respuesta vacia de la IA' }, { status: 500 });
     }
 
     return NextResponse.json({ reporte: textoFinal });
-
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || 'Error de conexión con la SDK de Gemini' }, { status: 500 });
+    return NextResponse.json({ error: 'Error interno en el servidor de IA' }, { status: 500 });
   }
 }
