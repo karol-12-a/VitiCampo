@@ -29,10 +29,10 @@ export async function POST(req: Request) {
     }
 
     let textoFinal = '';
-    // REVISIÓN DEFINITIVA: Acceso correcto al primer elemento de la lista [0]
-    if (data && data.candidates && data.candidates.length > 0) {
+    // CORRECCIÓN MATEMÁTICA DEFINITIVA CON ÍNDICES COMPLETOS [0]
+    if (data && data.candidates && data.candidates[0]) {
       const firstCandidate = data.candidates[0];
-      if (firstCandidate && firstCandidate.content && firstCandidate.content.parts && firstCandidate.content.parts.length > 0) {
+      if (firstCandidate.content && firstCandidate.content.parts && firstCandidate.content.parts[0]) {
         textoFinal = firstCandidate.content.parts[0].text || '';
       }
     }
