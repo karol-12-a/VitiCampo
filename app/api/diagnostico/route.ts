@@ -30,11 +30,11 @@ export async function POST(req: Request) {
 
     let textoFinal = '';
     
-    // SINTAXIS ALTERNATIVA ULTRA SEGURA: Sin corchetes conflictivos para el chat
+    // SINTAXIS DESTRUCTURADA INMUTABLE: Extrae el primer elemento de forma directa y nativa
     if (data && data.candidates && data.candidates.length > 0) {
-      const firstCandidate = data.candidates.at(0);
+      const [firstCandidate] = data.candidates;
       if (firstCandidate && firstCandidate.content && firstCandidate.content.parts && firstCandidate.content.parts.length > 0) {
-        const firstPart = firstCandidate.content.parts.at(0);
+        const [firstPart] = firstCandidate.content.parts;
         if (firstPart) {
           textoFinal = firstPart.text || '';
         }
