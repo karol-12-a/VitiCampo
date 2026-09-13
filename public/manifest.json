@@ -1,0 +1,19 @@
+{
+  "name": "Viticampo",
+  "short_name": "Viticampo",
+  "description": "PWA para diagnóstico agronómico de viñedos y gestión técnica en campo.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f7f5",
+  "theme_color": "#1a3324",
+  "orientation": "portrait-primary",
+  "lang": "es-AR",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

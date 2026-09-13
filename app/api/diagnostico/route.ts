@@ -1,58 +1,75 @@
 import { NextResponse } from 'next/server';
+import { GoogleGenAI } from '@google/genai';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
-    const { variedadUva, faseFenologica, sintomasDetectados } = await req.json();
+    const body = (await req.json()) as {
+      variedadUva?: string;
+      faseFenologica?: string;
+      sintomasDetectados?: string;
+    };
+
+    const variedadUva = body?.variedadUva?.trim();
+    const faseFenologica = body?.faseFenologica?.trim();
+    const sintomasDetectados = body?.sintomasDetectados?.trim();
+
+    if (!variedadUva || !faseFenologica || !sintomasDetectados) {
+      return NextResponse.json(
+        { error: 'Los campos variedadUva, faseFenologica y sintomasDetectados son obligatorios.' },
+        { status: 400 }
+      );
+    }
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return NextResponse.json({ error: 'GEMINI_API_KEY no configurada' }, { status: 500 });
     }
 
-    const prompt = `Actua como un ingeniero experto en viticultura. Analiza la siguiente situacion en el vinedo y genera un reporte estructurado con diagnostico presuntivo, nivel de riesgo y un plan de accion con 3 recomendaciones tecnicas:
-    - Variedad de Uva: ${variedadUva}
-    - Fase Fenologica: ${faseFenologica}
-    - Sintomas Detectados: ${sintomasDetectados}`;
+    const ai = new GoogleGenAI({ apiKey });
 
-    // Conexión estable v1 oficial de Google
-    const resp = await fetch('https://googleapis.com' + apiKey, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }]
-      }),
+    const prompt = `Actúa como ingeniero agrónomo experto en viticultura. Analiza la situación del viñedo y entrega un informe técnico claro, preciso y profesional.
+
+- Variedad de uva: ${variedadUva}
+- Fase fenológica: ${faseFenologica}
+- Síntomas detectados: ${sintomasDetectados}
+
+Incluye:
+1. Diagnóstico presuntivo y principales causas posibles.
+2. Nivel de riesgo.
+3. Plan de acción con exactamente 3 pasos concretos y priorizados.
+4. Recomendaciones técnicas en español.
+
+Responde solo con el texto del informe.`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-1.5-flash',
+      contents: prompt,
     });
 
-    const data = await resp.json();
-    
-    if (!resp.ok) {
-      return NextResponse.json({ error: data?.error?.message || 'Error en Google' }, { status: 500 });
+    const text =
+      (response as any)?.text ??
+      (response as any)?.candidates
+        ?.map((candidate: any) =>
+          candidate?.content?.parts
+            ?.map((part: any) => part?.text ?? '')
+            .join('') ?? ''
+        )
+        .join('\n') ??
+      '';
+
+    const reporte = text.trim();
+
+    if (!reporte) {
+      return NextResponse.json({ error: 'Respuesta vacía de la IA' }, { status: 500 });
     }
 
-    let textoFinal = '';
-    
-    // EXTRACCIÓN NATIVA CORREGIDA: Acceso seguro al primer elemento del array sin romper el servidor
-    if (data && data.candidates && data.candidates.length > 0) {
-      const [firstCandidate] = data.candidates;
-      if (firstCandidate && firstCandidate.content && firstCandidate.content.parts && firstCandidate.content.parts.length > 0) {
-        const [firstPart] = firstCandidate.content.parts;
-        if (firstPart) {
-          textoFinal = firstPart.text || '';
-        }
-      }
-    }
-
-    if (!textoFinal) {
-      return NextResponse.json({ error: 'Respuesta vacia de la IA' }, { status: 500 });
-    }
-
-    return NextResponse.json({ reporte: textoFinal });
-
-  } catch (err: any) {
-    return NextResponse.json({ error: err?.message || 'Error interno de red en el servidor' }, { status: 500 });
+    return NextResponse.json({ reporte });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error?.message || 'Error interno del servidor al generar el diagnóstico.' },
+      { status: 500 }
+    );
   }
 }
